@@ -1,0 +1,12 @@
+{
+  "name": "pi-ro",
+  "version": "1.0.0",
+  "description": "Read-only mode for pi — blocks file writes with an orange theme",
+  "keywords": ["pi-package"],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-tui": "*"
+  }
+}

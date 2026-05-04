@@ -1,6 +1,6 @@
-# pi Read-Only Extension
+# pi-ro
 
-Toggle read-only mode in [pi](https://github.com/badlogic/pi-mono) to prevent accidental file modifications.
+Read-only mode for [pi](https://github.com/badlogic/pi-mono). Prevent accidental file modifications with a single command.
 
 ## Features
 
@@ -11,24 +11,30 @@ Toggle read-only mode in [pi](https://github.com/badlogic/pi-mono) to prevent ac
 - **Orange theme** when active — switches the entire TUI to an orange/copper palette
 - **Restores previous theme** when disabled
 
-## Installation
+## Install
 
-### Option 1: Symlink (recommended — stays in sync with git repo)
+### From GitHub (recommended)
 
 ```bash
-ln -s /mnt/shared_ssd/Timepass/my-pi-agents/ro ~/.pi/agent/extensions/ro
+pi install git:github.com/yourusername/pi-ro
 ```
 
-### Option 2: Copy
+### From npm
 
 ```bash
-cp -r /mnt/shared_ssd/Timepass/my-pi-agents/ro ~/.pi/agent/extensions/
+pi install npm:pi-ro
 ```
 
-### Option 3: Quick test (one-off)
+### One-off test (no install, current session only)
 
 ```bash
-pi -e /mnt/shared_ssd/Timepass/my-pi-agents/ro/index.ts
+pi -e git:github.com/yourusername/pi-ro
+```
+
+### Local path (for development)
+
+```bash
+pi install /mnt/shared_ssd/Timepass/my-pi-agents/ro
 ```
 
 After installing, run `/reload` in pi or restart the agent.
@@ -44,14 +50,15 @@ Run it again to disable. State and previous theme persist across sessions.
 ## Files
 
 ```
-ro/
-├── index.ts              # Extension entry point
+pi-ro/
+├── package.json
+├── extensions/
+│   └── index.ts          # Extension entry point
 ├── themes/
 │   └── ro-orange.json    # Orange read-only theme
-├── README.md
-└── .gitignore
+└── README.md
 ```
 
 ## Customizing Blocked Commands
 
-Edit the `explicitMutators` array in `index.ts` to add or remove bash patterns.
+Edit the `explicitMutators` array in `extensions/index.ts` to add or remove bash patterns, then run `/reload`.
