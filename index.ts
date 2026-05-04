@@ -103,19 +103,6 @@ export default function (pi: ExtensionAPI) {
     }
   }
 
-  function showToast(ctx: ExtensionContext, text: string, durationMs: number) {
-    if (!ctx.hasUI) return;
-    const id = `ro-toast-${Date.now()}`;
-    ctx.ui.setWidget(
-      id,
-      (_tui, theme) => new Text(theme.fg("warning", text), 0, 0),
-      { placement: "belowEditor" }
-    );
-    setTimeout(() => {
-      ctx.ui.setWidget(id, undefined);
-    }, durationMs);
-  }
-
   async function switchTheme(ctx: ExtensionContext, themeName: string) {
     if (!ctx.hasUI) return;
     const result = await ctx.ui.setTheme(themeName);
@@ -195,7 +182,6 @@ export default function (pi: ExtensionAPI) {
         pi.appendEntry("ro-state", { active: true });
         await switchTheme(ctx, "ro-orange");
         applyUI(ctx);
-        showToast(ctx, "🟠 Read-only mode ON", 2500);
       } else {
         // Turning OFF: restore previous theme
         const restoreTheme = previousTheme ?? getCurrentThemeFromSettings();
@@ -203,7 +189,6 @@ export default function (pi: ExtensionAPI) {
         pi.appendEntry("ro-state", { active: false });
         await switchTheme(ctx, restoreTheme);
         applyUI(ctx);
-        showToast(ctx, "Read-only mode OFF", 2500);
       }
     },
   });
