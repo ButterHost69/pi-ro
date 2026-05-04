@@ -114,7 +114,7 @@ export default function (pi: ExtensionAPI) {
   // --- Events ---
 
   pi.on("resources_discover", async (_event, _ctx) => {
-    const themeDir = resolve(__dirname, "themes");
+    const themeDir = resolve(__dirname, "..", "themes");
     return { themePaths: [themeDir] };
   });
 
