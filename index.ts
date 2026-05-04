@@ -182,7 +182,6 @@ export default function (pi: ExtensionAPI) {
         pi.appendEntry("ro-state", { active: true });
         await switchTheme(ctx, "ro-orange");
         applyUI(ctx);
-        ctx.ui.notify("🟠 Read-only mode ON", "warning");
       } else {
         // Turning OFF: restore previous theme
         const restoreTheme = previousTheme ?? getCurrentThemeFromSettings();
@@ -190,7 +189,6 @@ export default function (pi: ExtensionAPI) {
         pi.appendEntry("ro-state", { active: false });
         await switchTheme(ctx, restoreTheme);
         applyUI(ctx);
-        ctx.ui.notify("Read-only mode OFF", "success");
       }
     },
   });
