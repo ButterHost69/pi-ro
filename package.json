@@ -5,6 +5,11 @@
   "keywords": ["pi-package"],
   "author": "",
   "license": "MIT",
+  "files": [
+    "extensions/",
+    "themes/",
+    "README.md"
+  ],
   "peerDependencies": {
     "@mariozechner/pi-coding-agent": "*",
     "@mariozechner/pi-tui": "*"
