@@ -1,6 +1,6 @@
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Text } from "@mariozechner/pi-tui";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { homedir } from "node:os";
 
@@ -44,6 +44,18 @@ export default function (pi: ExtensionAPI) {
       // ignore
     }
     return "dark";
+  }
+
+  function setThemeInSettings(themeName: string) {
+    try {
+      const settingsPath = resolve(homedir(), ".pi/agent/settings.json");
+      const raw = readFileSync(settingsPath, "utf8");
+      const parsed = JSON.parse(raw);
+      parsed.theme = themeName;
+      writeFileSync(settingsPath, JSON.stringify(parsed, null, 2) + "\n");
+    } catch {
+      // ignore
+    }
   }
 
   function stripQuotes(cmd: string): string {
@@ -119,6 +131,14 @@ export default function (pi: ExtensionAPI) {
 
     if (isReadOnly) {
       await switchTheme(ctx, "ro-orange");
+    } else {
+      // If theme was left as ro-orange from a prior session, restore it
+      const savedTheme = getCurrentThemeFromSettings();
+      if (savedTheme === "ro-orange") {
+        const restoreTheme = previousTheme ?? "dark";
+        await switchTheme(ctx, restoreTheme);
+        setThemeInSettings(restoreTheme);
+      }
     }
 
     applyUI(ctx);
@@ -183,6 +203,7 @@ export default function (pi: ExtensionAPI) {
         isReadOnly = false;
         pi.appendEntry("ro-state", { active: false });
         await switchTheme(ctx, restoreTheme);
+        setThemeInSettings(restoreTheme);
         applyUI(ctx);
       }
     },
