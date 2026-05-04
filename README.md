@@ -16,25 +16,19 @@ Read-only mode for [pi](https://github.com/badlogic/pi-mono). Prevent accidental
 ### From GitHub (recommended)
 
 ```bash
-pi install git:github.com/yourusername/pi-ro
-```
-
-### From npm
-
-```bash
-pi install npm:pi-ro
+pi install git:github.com/ButterHost69/pi-ro
 ```
 
 ### One-off test (no install, current session only)
 
 ```bash
-pi -e git:github.com/yourusername/pi-ro
+pi -e git:github.com/ButterHost69/pi-ro
 ```
 
 ### Local path (for development)
 
 ```bash
-pi install /mnt/shared_ssd/Timepass/my-pi-agents/ro
+pi install /mnt/shared_ssd/TimePass/my-pi-extenstions/ro
 ```
 
 After installing, run `/reload` in pi or restart the agent.
