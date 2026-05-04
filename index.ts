@@ -1,8 +1,12 @@
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Text } from "@mariozechner/pi-tui";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { homedir } from "node:os";
 
 export default function (pi: ExtensionAPI) {
   let isReadOnly = false;
+  let previousTheme: string | undefined;
 
   // --- Helpers ---
 
@@ -17,6 +21,31 @@ export default function (pi: ExtensionAPI) {
     return active;
   }
 
+  function findPreviousTheme(ctx: ExtensionContext): string | undefined {
+    const entries = ctx.sessionManager.getEntries();
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const entry = entries[i];
+      if (entry.type === "custom" && entry.customType === "ro-prev-theme") {
+        return (entry as any).data?.name;
+      }
+    }
+    return undefined;
+  }
+
+  function getCurrentThemeFromSettings(): string {
+    try {
+      const settingsPath = resolve(homedir(), ".pi/agent/settings.json");
+      const raw = readFileSync(settingsPath, "utf8");
+      const parsed = JSON.parse(raw);
+      if (typeof parsed.theme === "string" && parsed.theme) {
+        return parsed.theme;
+      }
+    } catch {
+      // ignore
+    }
+    return "dark";
+  }
+
   function stripQuotes(cmd: string): string {
     return cmd.replace(/(["'])(?:\\.|(?!\1)[^\\])*?\1/g, "");
   }
@@ -25,7 +54,6 @@ export default function (pi: ExtensionAPI) {
     const lower = command.toLowerCase();
     const stripped = stripQuotes(command);
 
-    // Explicit file-mutating commands
     const explicitMutators = [
       /\brm\b/,
       /\bmv\b/,
@@ -54,8 +82,6 @@ export default function (pi: ExtensionAPI) {
     ];
 
     if (explicitMutators.some((p) => p.test(lower))) return true;
-
-    // Shell redirections (write to file)
     if (/\s>\s/.test(stripped) || /\s>>\s/.test(stripped)) return true;
     if (/\d?>\s/.test(stripped) || /\d?>>\s/.test(stripped)) return true;
 
@@ -67,30 +93,39 @@ export default function (pi: ExtensionAPI) {
 
     if (isReadOnly) {
       ctx.ui.setStatus("ro", "🟠 READ-ONLY MODE");
-      ctx.ui.setWidget(
-        "ro",
-        (_tui, theme) => {
-          const line =
-            "🟠 READ-ONLY MODE — File writes and edits are blocked. Run /ro to disable.";
-          return new Text(theme.fg("warning", line), 0, 0);
-        },
-        { placement: "aboveEditor" }
-      );
       ctx.ui.setWorkingIndicator({
         frames: ["🟠", "🔶", "🟧", "🔶"],
         intervalMs: 300,
       });
     } else {
       ctx.ui.setStatus("ro", undefined);
-      ctx.ui.setWidget("ro", undefined);
-      ctx.ui.setWorkingIndicator(); // restore default spinner
+      ctx.ui.setWorkingIndicator();
+    }
+  }
+
+  async function switchTheme(ctx: ExtensionContext, themeName: string) {
+    if (!ctx.hasUI) return;
+    const result = await ctx.ui.setTheme(themeName);
+    if (!result.success) {
+      ctx.ui.notify(`Failed to switch theme: ${result.error}`, "error");
     }
   }
 
   // --- Events ---
 
+  pi.on("resources_discover", async (_event, _ctx) => {
+    const themeDir = resolve(__dirname, "themes");
+    return { themePaths: [themeDir] };
+  });
+
   pi.on("session_start", async (_event, ctx) => {
     isReadOnly = findLatestState(ctx);
+    previousTheme = findPreviousTheme(ctx);
+
+    if (isReadOnly) {
+      await switchTheme(ctx, "ro-orange");
+    }
+
     applyUI(ctx);
   });
 
@@ -139,13 +174,24 @@ export default function (pi: ExtensionAPI) {
     description:
       "Toggle read-only mode (blocks write, edit, and file-mutating bash commands)",
     handler: async (_args, ctx) => {
-      isReadOnly = !isReadOnly;
-      pi.appendEntry("ro-state", { active: isReadOnly });
-      applyUI(ctx);
-      ctx.ui.notify(
-        isReadOnly ? "🟠 Read-only mode ON" : "Read-only mode OFF",
-        isReadOnly ? "warning" : "success"
-      );
+      if (!isReadOnly) {
+        // Turning ON: save current theme, switch to orange
+        previousTheme = previousTheme ?? getCurrentThemeFromSettings();
+        pi.appendEntry("ro-prev-theme", { name: previousTheme });
+        isReadOnly = true;
+        pi.appendEntry("ro-state", { active: true });
+        await switchTheme(ctx, "ro-orange");
+        applyUI(ctx);
+        ctx.ui.notify("🟠 Read-only mode ON", "warning");
+      } else {
+        // Turning OFF: restore previous theme
+        const restoreTheme = previousTheme ?? getCurrentThemeFromSettings();
+        isReadOnly = false;
+        pi.appendEntry("ro-state", { active: false });
+        await switchTheme(ctx, restoreTheme);
+        applyUI(ctx);
+        ctx.ui.notify("Read-only mode OFF", "success");
+      }
     },
   });
 }

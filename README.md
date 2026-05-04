@@ -8,7 +8,8 @@ Toggle read-only mode in [pi](https://github.com/badlogic/pi-mono) to prevent ac
 - Blocks `write` and `edit` tool calls
 - Blocks file-mutating `bash` commands (`rm`, `mv`, `cp`, `sed -i`, `>`, `git add`, `npm install`, etc.)
 - Injects a system prompt so the LLM knows it is in read-only mode and structures output as analysis only
-- Visual indicators: orange status bar, banner widget, and orange working spinner
+- **Orange theme** when active — switches the entire TUI to an orange/copper palette
+- **Restores previous theme** when disabled
 
 ## Installation
 
@@ -38,7 +39,18 @@ After installing, run `/reload` in pi or restart the agent.
 /ro
 ```
 
-Run it again to disable. State persists across sessions.
+Run it again to disable. State and previous theme persist across sessions.
+
+## Files
+
+```
+ro/
+├── index.ts              # Extension entry point
+├── themes/
+│   └── ro-orange.json    # Orange read-only theme
+├── README.md
+└── .gitignore
+```
 
 ## Customizing Blocked Commands
 
